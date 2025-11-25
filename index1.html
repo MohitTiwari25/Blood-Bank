@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhopal Blood Bank | Life Saver</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
+
+        :root {
+            --primary: #e63946;
+            --secondary: #1d3557;
+            --success: #2a9d8f;
+            --bg-color: #f0f2f5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            background: var(--secondary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-shadow: 1px 1px 0 #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: var(--primary);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            font-weight: 600;
+        }
+        .nav-btn:hover { transform: scale(1.05); }
+
+        /* --- AUTH CONTAINER --- */
+        .auth-container {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff; border-radius: 10px;
+            box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+            width: 850px; max-width: 100%; min-height: 600px;
+            overflow: hidden; display: flex;
+        }
+
+        .form-container {
+            padding: 2rem; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            width: 50%; transition: all 0.6s ease-in-out;
+            overflow-y: auto; max-height: 100%; 
+        }
+        .form-container::-webkit-scrollbar { width: 5px; }
+        .form-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
+
+        input, select {
+            background-color: #eee; border: none; padding: 10px 15px;
+            margin: 5px 0; width: 100%; border-radius: 5px; font-size: 0.9rem;
+        }
+
+        button.auth-btn {
+            border-radius: 20px; border: 1px solid var(--primary);
+            background-color: var(--primary); color: #FFFFFF;
+            font-size: 12px; font-weight: bold; padding: 12px 45px;
+            letter-spacing: 1px; text-transform: uppercase;
+            transition: transform 80ms ease-in; margin-top: 15px; cursor: pointer;
+        }
+        button.ghost { background-color: transparent; border-color: #FFFFFF; }
+        button.auth-btn:active { transform: scale(0.95); }
+
+        /* Animation Classes */
+        .overlay-container {
+            position: absolute; top: 0; left: 50%; width: 50%; height: 100%;
+            overflow: hidden; transition: transform 0.6s ease-in-out; z-index: 100;
+        }
+        .overlay {
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+            color: #FFFFFF; position: relative; left: -100%; height: 100%; width: 200%;
+            transform: translateX(0); transition: transform 0.6s ease-in-out;
+        }
+        .overlay-panel {
+            position: absolute; display: flex; align-items: center; justify-content: center;
+            flex-direction: column; padding: 0 40px; text-align: center; top: 0; height: 100%; width: 50%;
+            transform: translateX(0); transition: transform 0.6s ease-in-out;
+        }
+        .overlay-left { transform: translateX(-20%); }
+        .overlay-right { right: 0; transform: translateX(0); }
+
+        .auth-container.right-panel-active .sign-in-container { transform: translateX(100%); }
+        .auth-container.right-panel-active .sign-up-container { transform: translateX(100%); opacity: 1; z-index: 5; }
+        .auth-container.right-panel-active .overlay-container { transform: translateX(-100%); }
+        .auth-container.right-panel-active .overlay { transform: translateX(50%); }
+        .auth-container.right-panel-active .overlay-left { transform: translateX(0); }
+        .auth-container.right-panel-active .overlay-right { transform: translateX(20%); }
+        
+        .sign-up-container { position: absolute; top: 0; height: 100%; left: 0; width: 50%; opacity: 0; z-index: 1; }
+        .sign-in-container { position: absolute; top: 0; height: 100%; left: 0; width: 50%; z-index: 2; }
+
+        /* --- DASHBOARD & TABLES --- */
+        .dashboard {
+            display: none; padding: 2rem; width: 100%; max-width: 1300px; margin: 0 auto;
+            animation: fadeIn 0.8s; margin-bottom: 50px;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .welcome-banner {
+            background: white; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;
+            border-left: 5px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
+        .stat-card .count { font-size: 2.5rem; font-weight: 800; color: var(--primary); }
+
+        /* Tables */
+        .table-responsive { overflow-x: auto; }
+        table {
+            width: 100%; border-collapse: collapse; background: white; border-radius: 8px;
+            overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); margin-bottom: 2rem; min-width: 900px;
+        }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        th { background-color: var(--secondary); color: white; }
+        tr:hover { background-color: #f8f8f8; }
+
+        .blood-card {
+            background: white; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--primary);
+        }
+        .status-card {
+            background: white; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid orange;
+        }
+        .status-card.approved { border-left-color: var(--success); }
+
+        .blood-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        
+        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-approve { background: var(--success); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* --- MODAL FOR COLLECTOR REQUEST --- */
+        .modal {
+            display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff; padding: 30px; border-radius: 10px; width: 500px; max-width: 90%;
+            position: relative; animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #888; }
+        .close-modal:hover { color: var(--primary); }
+
+        /* RESET BUTTON STYLE */
+        .reset-sys-btn {
+            position: fixed; bottom: 20px; right: 20px;
+            background-color: #ff3333; color: white;
+            border: none; padding: 10px 20px; border-radius: 5px;
+            font-weight: bold; cursor: pointer; z-index: 999;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .reset-sys-btn:hover { background-color: #cc0000; }
+
+    </style>
+</head>
+<body>
+
+    <button class="reset-sys-btn" onclick="resetSystem()">
+        <i class="fas fa-trash-alt"></i> Reset System Data
+    </button>
+
+    <nav id="navbar" style="display: none;">
+        <div class="logo"><i class="fas fa-heartbeat"></i> Bhopal BloodBank</div>
+        <div>
+            <span id="userDisplay" style="margin-right: 15px; font-weight: 600;"></span>
+            <button class="nav-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="auth-container" id="authContainer">
+        <div class="form-container sign-up-container">
+            <form id="signupForm">
+                <h1 style="margin-bottom: 10px;">Create Account</h1>
+                
+                <select id="regRole" required style="margin-bottom: 15px; border: 2px solid var(--secondary);">
+                    <option value="" disabled selected>Select Account Type</option>
+                    <option value="donor">I am a Donor (Person)</option>
+                    <option value="collector">We are a Hospital (Collector)</option>
+                </select>
+
+                <input type="text" id="regName" placeholder="Full Name" required />
+                <input type="text" id="regRegNo" placeholder="Hospital Registration No." style="display:none;" />
+                <input type="email" id="regEmail" placeholder="Email" required />
+                <input type="password" id="regPass" placeholder="Password" required />
+                
+                <div style="display:flex; gap:5px; width:100%">
+                    <input type="text" id="regPhone" placeholder="Mobile / Landline" required />
+                    <input type="number" id="regAge" placeholder="Age" style="width: 80px;" />
+                </div>
+                
+                <input type="text" id="regAddress" placeholder="Address (Area, Pincode)" required />
+                
+                <select id="regGender">
+                    <option value="" disabled selected>Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <button type="submit" class="auth-btn">Sign Up</button>
+            </form>
+        </div>
+
+        <div class="form-container sign-in-container">
+            <form id="loginForm">
+                <h1>Sign In</h1>
+                <div class="social-container" style="margin: 20px 0;">
+                    <i class="fas fa-user-circle" style="font-size: 3rem; color: var(--secondary);"></i>
+                </div>
+                <input type="text" id="loginEmail" placeholder="Email / Admin ID" required />
+                <input type="password" id="loginPass" placeholder="Password" required />
+                <button type="submit" class="auth-btn">Sign In</button>
+            </form>
+        </div>
+
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Welcome Back!</h1>
+                    <p>To keep connected with us please login with your personal info</p>
+                    <button class="ghost auth-btn" id="signIn">Sign In</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>Hello!</h1>
+                    <p>Donors and Registered Hospitals, please join us to save lives.</p>
+                    <button class="ghost auth-btn" id="signUp">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="donorDashboard" class="dashboard">
+        <div class="welcome-banner">
+            <h2><i class="fas fa-hand-holding-heart"></i> Donor Panel</h2>
+            <p>Please provide your Bank Details and confirm Personal Info to list blood.</p>
+        </div>
+        
+        <div class="blood-card" style="max-width: 700px; margin: 0 auto;">
+            <h3>Step 1: Confirm Details & Financial Info</h3>
+            <form id="donationForm" style="margin-top: 15px;">
+                <div style="display:flex; gap:10px;">
+                     <input type="text" id="dPhone" placeholder="Mobile Number" required>
+                     <input type="text" id="dAddress" placeholder="Address" required>
+                </div>
+                <input type="email" id="dEmail" placeholder="Gmail Account" readonly style="background:#ddd;">
+                <h4 style="margin-top:10px; color:var(--secondary)">Bank Details (For Reimbursement)</h4>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="dAccount" placeholder="Account Number" required>
+                    <input type="text" id="dIFSC" placeholder="IFSC Code" required>
+                </div>
+                <h3 style="margin-top:15px;">Step 2: Blood Details</h3>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="bloodType" placeholder="Blood Type (e.g. O+)" required>
+                    <input type="number" id="bloodUnits" placeholder="Units (ml)" required>
+                </div>
+                <input type="number" id="bloodCharge" placeholder="Processing Charge (₹)" required>
+                <button type="submit" class="auth-btn" style="width:100%">Submit Listing</button>
+            </form>
+        </div>
+        <h3 style="margin-top: 30px;">Your Active Listings</h3>
+        <div id="myDonations" class="blood-grid"></div>
+    </div>
+
+    <div id="collectorDashboard" class="dashboard">
+        <div class="welcome-banner">
+            <h2><i class="fas fa-hospital-alt"></i> Hospital Panel</h2>
+            <p>Authorized Hospital Access.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Blood Collected (Times)</h3>
+                <div class="count" id="hospitalCollectionCount">0</div>
+            </div>
+        </div>
+
+        <h3><i class="fas fa-history"></i> Full Collection History</h3>
+        <div class="table-responsive" style="margin-bottom: 40px;">
+            <table id="collectionHistoryTable">
+                <thead>
+                    <tr>
+                        <th>Date Requested</th>
+                        <th>Blood Type</th>
+                        <th>Units</th>
+                        <th>Donor Email</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <h3 style="margin-bottom: 15px; color: var(--secondary);">Active Request Status</h3>
+        <div id="myRequestStatus" class="blood-grid" style="margin-bottom: 40px;"></div>
+
+        <h3 style="margin-bottom: 15px; color: var(--secondary);">Available Blood Stock</h3>
+        <div id="publicBloodGrid" class="blood-grid"></div>
+    </div>
+
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 style="color:var(--secondary); margin-bottom:15px;">Request Blood</h2>
+            <p style="margin-bottom:15px; font-size:0.9rem;">Please provide complete details to the Admin.</p>
+            <form id="requestForm">
+                <label>Authorized Hospital Name</label>
+                <input type="text" id="reqName" readonly style="background:#eee">
+                <label>Hospital Branch/Dept Name</label>
+                <input type="text" id="reqHospital" placeholder="e.g. Casualty Dept, AIIMS" required>
+                <label>Contact Number</label>
+                <input type="text" id="reqContact" required>
+                <label>Gmail</label>
+                <input type="email" id="reqEmail" required>
+                <label>Time Required</label>
+                <input type="datetime-local" id="reqTime" required>
+                <button type="submit" class="auth-btn" style="width:100%; margin-top:20px;">Send Request</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminDashboard" class="dashboard">
+        <div class="welcome-banner">
+            <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+            <p>Monitored Access: Mohit@1234</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Donors</h3>
+                <div class="count" id="statDonor">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Hospitals</h3>
+                <div class="count" id="statCollector">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Requests</h3>
+                <div class="count" id="statRequests">0</div>
+            </div>
+        </div>
+        
+        <h3>1. Incoming Hospital Requests</h3>
+        <div class="table-responsive">
+            <table id="requestsTable">
+                <thead><tr>
+                    <th>Hospital Name/Email</th>
+                    <th>Dept/Branch</th>
+                    <th>Time Required</th>
+                    <th>Donor ID</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <h3>2. Active Stock</h3>
+        <div class="table-responsive">
+            <table id="stocksTable">
+                <thead><tr>
+                    <th>Type</th>
+                    <th>Donor Email</th>
+                    <th>Units</th>
+                    <th>Charge</th>
+                    <th>Account No.</th>
+                    <th>IFSC</th>
+                    <th>Action</th>
+                </tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+        <h3>3. Registered Users</h3>
+        <div class="table-responsive">
+             <table id="usersTable">
+                <thead><tr><th>Name</th><th>Role</th><th>Reg No. / Age</th><th>Contact</th><th>Action</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DYNAMIC REGISTRATION FORM LOGIC ---
+        document.getElementById('regRole').addEventListener('change', function() {
+            const isHospital = this.value === 'collector';
+            document.getElementById('regName').placeholder = isHospital ? "Hospital Name" : "Full Name";
+            const regNoInput = document.getElementById('regRegNo');
+            regNoInput.style.display = isHospital ? 'block' : 'none';
+            regNoInput.required = isHospital; 
+            const ageInput = document.getElementById('regAge');
+            const genderInput = document.getElementById('regGender');
+            ageInput.style.display = isHospital ? 'none' : 'block';
+            genderInput.style.display = isHospital ? 'none' : 'block';
+            ageInput.required = !isHospital;
+            genderInput.required = !isHospital;
+        });
+
+        // --- 2. SYSTEM RESET ---
+        function resetSystem() {
+            if(confirm("Are you sure? This will delete all data!")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                alert("System Reset Successfully. Page will reload.");
+                location.reload();
+            }
+        }
+
+        // --- 3. DATA SETUP ---
+        if(!localStorage.getItem('bb_users')) {
+            const initialUsers = [
+                { name: "Rajesh Kumar", email: "rajesh@gmail.com", pass: "123", role: "donor", phone: "9998887776", address: "MP Nagar", age: "24", gender: "Male" },
+                { name: "City Hospital", email: "city@hospital.com", pass: "123", role: "collector", phone: "0755-12345", address: "Kolar", regNo: "HOSP-999" }
+            ];
+            localStorage.setItem('bb_users', JSON.stringify(initialUsers));
+        }
+        if(!localStorage.getItem('bb_stock')) localStorage.setItem('bb_stock', JSON.stringify([]));
+        if(!localStorage.getItem('bb_requests')) localStorage.setItem('bb_requests', JSON.stringify([]));
+
+        // --- 4. UI & AUTH LOGIC ---
+        const authContainer = document.getElementById('authContainer');
+        const nav = document.getElementById('navbar');
+        let selectedStockIndex = null; 
+
+        document.getElementById('signUp').addEventListener('click', () => authContainer.classList.add("right-panel-active"));
+        document.getElementById('signIn').addEventListener('click', () => authContainer.classList.remove("right-panel-active"));
+
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const role = document.getElementById('regRole').value;
+            const newUser = {
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                pass: document.getElementById('regPass').value,
+                phone: document.getElementById('regPhone').value,
+                address: document.getElementById('regAddress').value,
+                role: role,
+                regNo: role === 'collector' ? document.getElementById('regRegNo').value : null,
+                age: role === 'donor' ? document.getElementById('regAge').value : null,
+                gender: role === 'donor' ? document.getElementById('regGender').value : null
+            };
+            const users = JSON.parse(localStorage.getItem('bb_users'));
+            if(users.find(u => u.email === newUser.email)) { alert("User Exists!"); return; }
+            users.push(newUser);
+            localStorage.setItem('bb_users', JSON.stringify(users));
+            alert(role === 'collector' ? "Hospital Registered Successfully!" : "Donor Registered Successfully!");
+            authContainer.classList.remove("right-panel-active");
+            e.target.reset();
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            if(email === "Mohit@1234" && pass === "1234") {
+                const admin = { name: "Admin", email: email, role: "admin" };
+                sessionStorage.setItem('currentUser', JSON.stringify(admin));
+                loadDashboard(admin);
+                return;
+            }
+            const users = JSON.parse(localStorage.getItem('bb_users'));
+            const user = users.find(u => u.email === email && u.pass === pass);
+            if (user) {
+                sessionStorage.setItem('currentUser', JSON.stringify(user));
+                loadDashboard(user);
+            } else {
+                alert("Invalid Credentials");
+            }
+        });
+
+        // --- 5. DASHBOARD ROUTER ---
+        function loadDashboard(user) {
+            authContainer.style.display = 'none';
+            nav.style.display = 'flex';
+            document.getElementById('userDisplay').innerText = `Hello, ${user.name}`;
+            document.querySelectorAll('.dashboard').forEach(d => d.style.display = 'none');
+
+            if(user.role === 'donor') {
+                document.getElementById('donorDashboard').style.display = 'block';
+                document.getElementById('dEmail').value = user.email;
+                document.getElementById('dPhone').value = user.phone || "";
+                document.getElementById('dAddress').value = user.address || "";
+                renderMyDonations(user.email);
+            } else if(user.role === 'collector') {
+                document.getElementById('collectorDashboard').style.display = 'block';
+                renderPublicStock();
+                renderCollectorRequestStatus(user.email);
+                renderCollectorStats(user.email); // NEW STATS CALL
+            } else if(user.role === 'admin') {
+                document.getElementById('adminDashboard').style.display = 'block';
+                renderAdminView();
+            }
+        }
+
+        // --- 6. DONOR LOGIC ---
+        document.getElementById('donationForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = JSON.parse(sessionStorage.getItem('currentUser'));
+            const newStock = {
+                id: Date.now(),
+                donorEmail: user.email,
+                phone: document.getElementById('dPhone').value,
+                address: document.getElementById('dAddress').value,
+                accountNum: document.getElementById('dAccount').value, 
+                ifsc: document.getElementById('dIFSC').value,        
+                type: document.getElementById('bloodType').value,
+                units: document.getElementById('bloodUnits').value,
+                charge: document.getElementById('bloodCharge').value
+            };
+            const stocks = JSON.parse(localStorage.getItem('bb_stock'));
+            stocks.push(newStock);
+            localStorage.setItem('bb_stock', JSON.stringify(stocks));
+            alert("Stock Listed!");
+            e.target.reset();
+            document.getElementById('dEmail').value = user.email;
+            renderMyDonations(user.email);
+        });
+
+        function renderMyDonations(email) {
+            const stocks = JSON.parse(localStorage.getItem('bb_stock'));
+            const myStocks = stocks.filter(s => s.donorEmail === email);
+            document.getElementById('myDonations').innerHTML = myStocks.map(s => `
+                <div class="blood-card">
+                    <h4>${s.type}</h4> <p>${s.units} ml</p> <div class="price">₹${s.charge}</div>
+                    <small>IFSC: ${s.ifsc}</small>
+                </div>
+            `).join('');
+        }
+
+        // --- 7. HOSPITAL (COLLECTOR) LOGIC ---
+        function renderPublicStock() {
+            const stocks = JSON.parse(localStorage.getItem('bb_stock'));
+            const container = document.getElementById('publicBloodGrid');
+            if(stocks.length === 0) { container.innerHTML = "<p>No blood available.</p>"; return; }
+            container.innerHTML = stocks.map((s, index) => `
+                <div class="blood-card">
+                    <div class="price">₹${s.charge}</div>
+                    <h3>${s.type}</h3>
+                    <p>Units: ${s.units} ml</p>
+                    <p>Location: ${s.address}</p>
+                    <button class="auth-btn" style="padding: 8px 20px; margin-top:10px;" 
+                        onclick="openRequestModal(${index})">Request</button>
+                </div>
+            `).join('');
+        }
+
+        function renderCollectorRequestStatus(email) {
+            const requests = JSON.parse(localStorage.getItem('bb_requests'));
+            const myReqs = requests.filter(r => r.collectorEmail === email);
+            const container = document.getElementById('myRequestStatus');
+            
+            if(myReqs.length === 0) { container.innerHTML = "<p style='color:#777;'>No active requests.</p>"; return; }
+
+            // Only show Pending or Recently Approved here. Full history is in table.
+            container.innerHTML = myReqs.map(r => `
+                <div class="status-card ${r.status === 'Approved' ? 'approved' : ''}">
+                    <h3><i class="fas fa-hospital"></i> ${r.hospital}</h3>
+                    <p>Blood Type: <strong>${r.bloodType}</strong></p>
+                    <div style="margin-top:10px; font-weight:bold; color: ${r.status === 'Approved' ? 'var(--success)' : 'orange'}">
+                        STATUS: ${r.status}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // NEW: Render detailed stats and history
+        function renderCollectorStats(email) {
+            const requests = JSON.parse(localStorage.getItem('bb_requests'));
+            // Filter where current user is the collector AND status is Approved
+            const approvedReqs = requests.filter(r => r.collectorEmail === email && r.status === 'Approved');
+            
+            // Update Big Counter
+            document.getElementById('hospitalCollectionCount').innerText = approvedReqs.length;
+
+            // Update History Table
+            const historyBody = document.querySelector('#collectionHistoryTable tbody');
+            if(approvedReqs.length === 0) {
+                historyBody.innerHTML = "<tr><td colspan='5'>No approved collections yet.</td></tr>";
+            } else {
+                historyBody.innerHTML = approvedReqs.map(r => `
+                    <tr>
+                        <td>${new Date(r.reqId).toLocaleDateString()}</td>
+                        <td style="color:red; font-weight:bold">${r.bloodType}</td>
+                        <td>${r.units} ml</td>
+                        <td>${r.donorEmail}</td>
+                        <td style="color:green; font-weight:bold">Collected</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        window.openRequestModal = (index) => {
+            selectedStockIndex = index;
+            const user = JSON.parse(sessionStorage.getItem('currentUser'));
+            document.getElementById('reqName').value = user.name;
+            document.getElementById('reqEmail').value = user.email;
+            document.getElementById('reqContact').value = user.phone || "";
+            document.getElementById('requestModal').style.display = "flex";
+        };
+
+        window.closeModal = () => document.getElementById('requestModal').style.display = "none";
+
+        document.getElementById('requestForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const stocks = JSON.parse(localStorage.getItem('bb_stock'));
+            const targetStock = stocks[selectedStockIndex];
+            const newReq = {
+                reqId: Date.now(),
+                collectorName: document.getElementById('reqName').value,
+                collectorEmail: document.getElementById('reqEmail').value,
+                hospital: document.getElementById('reqHospital').value,
+                contact: document.getElementById('reqContact').value,
+                timeNeeded: document.getElementById('reqTime').value,
+                donorEmail: targetStock.donorEmail,
+                bloodType: targetStock.type,
+                units: targetStock.units, // Store units for history
+                status: "Pending"
+            };
+            const requests = JSON.parse(localStorage.getItem('bb_requests'));
+            requests.push(newReq);
+            localStorage.setItem('bb_requests', JSON.stringify(requests));
+            alert("Request Sent to Admin!");
+            closeModal();
+            renderCollectorRequestStatus(newReq.collectorEmail);
+        });
+
+        // --- 8. ADMIN LOGIC ---
+        function renderAdminView() {
+            const users = JSON.parse(localStorage.getItem('bb_users'));
+            const stocks = JSON.parse(localStorage.getItem('bb_stock'));
+            const requests = JSON.parse(localStorage.getItem('bb_requests'));
+
+            document.getElementById('statDonor').innerText = users.filter(u => u.role === 'donor').length;
+            document.getElementById('statCollector').innerText = users.filter(u => u.role === 'collector').length;
+            document.getElementById('statRequests').innerText = requests.length;
+
+            document.querySelector('#requestsTable tbody').innerHTML = requests.map((r, index) => `
+                <tr>
+                    <td>${r.collectorName}<br><small>${r.collectorEmail}</small></td>
+                    <td><strong>${r.hospital}</strong></td>
+                    <td>${r.timeNeeded.replace("T", " ")}</td>
+                    <td>${r.donorEmail}</td>
+                    <td><span style="color:${r.status === 'Approved' ? 'green' : 'orange'}">${r.status}</span></td>
+                    <td>
+                        ${r.status === 'Pending' 
+                          ? `<button class="btn-approve" onclick="approveRequest(${index})">Mark Done</button>` 
+                          : `<i class="fas fa-check-circle" style="color:green"></i>`}
+                    </td>
+                </tr>
+            `).join('');
+
+            document.querySelector('#stocksTable tbody').innerHTML = stocks.map((s, index) => `
+                <tr>
+                    <td><strong style="color:red">${s.type}</strong></td>
+                    <td>${s.donorEmail}</td>
+                    <td>${s.units}</td>
+                    <td>₹${s.charge}</td>
+                    <td>${s.accountNum}</td>
+                    <td>${s.ifsc}</td>
+                    <td><button class="btn-delete" onclick="deleteStock(${index})">X</button></td>
+                </tr>
+            `).join('');
+
+            document.querySelector('#usersTable tbody').innerHTML = users.map((u, index) => {
+                const info = u.role === 'collector' ? `Reg: ${u.regNo}` : `Age: ${u.age}, ${u.gender}`;
+                return `
+                <tr>
+                    <td>${u.name}</td>
+                    <td>${u.role}</td>
+                    <td>${info}</td>
+                    <td>${u.phone}<br><small>${u.email}</small></td>
+                    <td>${u.role !== 'admin' ? `<button class="btn-delete" onclick="deleteUser(${index})">X</button>` : '-'}</td>
+                </tr>
+            `}).join('');
+        }
+
+        window.approveRequest = (index) => {
+            const requests = JSON.parse(localStorage.getItem('bb_requests'));
+            requests[index].status = "Approved";
+            localStorage.setItem('bb_requests', JSON.stringify(requests));
+            renderAdminView();
+        };
+
+        window.deleteStock = (i) => {
+             const s = JSON.parse(localStorage.getItem('bb_stock'));
+             s.splice(i,1); localStorage.setItem('bb_stock', JSON.stringify(s)); renderAdminView();
+        };
+        window.deleteUser = (i) => {
+             const u = JSON.parse(localStorage.getItem('bb_users'));
+             u.splice(i,1); localStorage.setItem('bb_users', JSON.stringify(u)); renderAdminView();
+        };
+        function logout() { sessionStorage.removeItem('currentUser'); location.reload(); }
+
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        if(currentUser) loadDashboard(currentUser);
+
+    </script>
+</body>
+</html>
